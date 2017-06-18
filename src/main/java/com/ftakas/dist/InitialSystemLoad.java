@@ -1,6 +1,9 @@
 package com.ftakas.dist;
 
 import com.ftakas.dist.domain.*;
+import com.ftakas.dist.domain.property.*;
+import com.ftakas.dist.props.PropertyDefnService;
+import com.ftakas.dist.props.Props;
 import com.ftakas.dist.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,22 +22,43 @@ public class InitialSystemLoad implements ApplicationRunner {
     private static final Logger logger = LoggerFactory.getLogger(InitialSystemLoad.class);
 
     private PropertyDefnRepository propertyDefnRepository;
+    private BooleanPropertyValRepository booleanPropertyValRepository;
+    private IntegerPropertyValRepository integerPropertyValRepository;
+    private FloatingPointPropertyValRepository floatingPointPropertyValRepository;
+    private DObjectPropertyValRepository dObjectPropertyValRepository;
+    private PropertyDefnPropertyValRepository propertyDefnPropertyValRepository;
     private ClazzRepository clazzRepository;
     private DObjectRepository dObjectRepository;
     private ClazzPropertyValRepository clazzPropertyValRepository;
     private StringPropertyValRepository stringPropertyValRepository;
+    private PropertyDefnService propertyDefnService;
+    private PersistenceHelper persistenceHelper;
 
     @Autowired
     public InitialSystemLoad(PropertyDefnRepository propertyDefnRepository,
+                             BooleanPropertyValRepository booleanPropertyValRepository,
+                             IntegerPropertyValRepository integerPropertyValRepository,
+                             FloatingPointPropertyValRepository floatingPointPropertyValRepository,
+                             DObjectPropertyValRepository dObjectPropertyValRepository,
+                             PropertyDefnPropertyValRepository propertyDefnPropertyValRepository,
                              ClazzRepository clazzRepository,
                              DObjectRepository dObjectRepository,
                              ClazzPropertyValRepository clazzPropertyValRepository,
-                             StringPropertyValRepository stringPropertyValRepository) {
+                             StringPropertyValRepository stringPropertyValRepository,
+                             PropertyDefnService propertyDefnService,
+                             PersistenceHelper persistenceHelper) {
         this.propertyDefnRepository = propertyDefnRepository;
+        this.booleanPropertyValRepository = booleanPropertyValRepository;
+        this.integerPropertyValRepository = integerPropertyValRepository;
+        this.floatingPointPropertyValRepository = floatingPointPropertyValRepository;
+        this.dObjectPropertyValRepository = dObjectPropertyValRepository;
+        this.propertyDefnPropertyValRepository = propertyDefnPropertyValRepository;
         this.clazzRepository = clazzRepository;
         this.dObjectRepository = dObjectRepository;
         this.clazzPropertyValRepository = clazzPropertyValRepository;
         this.stringPropertyValRepository = stringPropertyValRepository;
+        this.propertyDefnService = propertyDefnService;
+        this.persistenceHelper = persistenceHelper;
     }
 
     @Transactional
@@ -50,80 +74,28 @@ public class InitialSystemLoad implements ApplicationRunner {
 
         PropertyDefn namePropertyDefn = new PropertyDefn();
         namePropertyDefn.setPropertyType(PropertyType.String);
+        namePropertyDefn.setName("name");
         namePropertyDefn.setDefaultVal(null);
         namePropertyDefn.setArray(false);
-        namePropertyDefn = propertyDefnRepository.save(namePropertyDefn);
-
-        Collection<PropertyDefn> propertyDefnsForMetaClazz = new ArrayList<>();
-        propertyDefnsForMetaClazz.add(namePropertyDefn);
-
-        Clazz metaClazz = new Clazz();
-        metaClazz.setPropertyDefns(propertyDefnsForMetaClazz);
-        metaClazz.setProperties(new ArrayList<>());
-        metaClazz = clazzRepository.save(metaClazz);
+        propertyDefnRepository.save(namePropertyDefn);
 
         PropertyDefn superClazzPropertyDefn = new PropertyDefn();
         superClazzPropertyDefn.setPropertyType(PropertyType.Clazz);
+        superClazzPropertyDefn.setName("super");
         superClazzPropertyDefn.setDefaultVal(null);
         superClazzPropertyDefn.setArray(false);
-        superClazzPropertyDefn = propertyDefnRepository.save(superClazzPropertyDefn);
+        propertyDefnRepository.save(superClazzPropertyDefn);
 
-        Collection<PropertyDefn> propertyDefnsForObjectClazz = new ArrayList<>();
-        propertyDefnsForObjectClazz.add(namePropertyDefn);
-        propertyDefnsForObjectClazz.add(superClazzPropertyDefn);
+        Props props = new Props(null, null, propertyDefnService);
 
-        ClazzPropertyVal objectSuperClazzPropertyVal = new ClazzPropertyVal();
-        objectSuperClazzPropertyVal.setPropertyDefn(superClazzPropertyDefn);
-        objectSuperClazzPropertyVal.setDirty(false);
-        objectSuperClazzPropertyVal.setInConflict(false);
-        List<Clazz> superClazzList = new ArrayList<>();
-        superClazzList.add(metaClazz);
-        objectSuperClazzPropertyVal.setClazzList(superClazzList);
-        objectSuperClazzPropertyVal = clazzPropertyValRepository.save(objectSuperClazzPropertyVal);
+        Clazz metaClazz = props.createNewClazz("Meta", null);
+        metaClazz = persistenceHelper.saveClazzAndItsProperties(metaClazz);
 
-        StringPropertyVal objectNamePropertyVal = new StringPropertyVal();
-        objectNamePropertyVal.setPropertyDefn(namePropertyDefn);
-        objectNamePropertyVal.setDirty(false);
-        objectNamePropertyVal.setInConflict(false);
-        List<String> objectClassNameList = new ArrayList<>();
-        objectClassNameList.add("Object");
-        objectNamePropertyVal.setStringList(objectClassNameList);
-        objectNamePropertyVal = stringPropertyValRepository.save(objectNamePropertyVal);
+        Clazz objectClazz = props.createNewClazz("Object", metaClazz);
+        objectClazz = persistenceHelper.saveClazzAndItsProperties(objectClazz);
 
-        Collection<PropertyVal> propertiesForObjectClazz = new ArrayList<>();
-        propertiesForObjectClazz.add(objectSuperClazzPropertyVal);
-        propertiesForObjectClazz.add(objectNamePropertyVal);
-
-        Clazz objectClazz = new Clazz();
-        objectClazz.setPropertyDefns(propertyDefnsForObjectClazz);
-        objectClazz.setProperties(propertiesForObjectClazz);
-        objectClazz = clazzRepository.save(objectClazz);
-
-        ClazzPropertyVal firstObjectClazzPropertyVal = new ClazzPropertyVal();
-        firstObjectClazzPropertyVal.setPropertyDefn(superClazzPropertyDefn);
-        firstObjectClazzPropertyVal.setDirty(false);
-        firstObjectClazzPropertyVal.setInConflict(false);
-        List<Clazz> clazzList = new ArrayList<>();
-        clazzList.add(objectClazz);
-        firstObjectClazzPropertyVal.setClazzList(clazzList);
-        firstObjectClazzPropertyVal = clazzPropertyValRepository.save(firstObjectClazzPropertyVal);
-
-        StringPropertyVal firstObjectNamePropertyVal = new StringPropertyVal();
-        firstObjectNamePropertyVal.setPropertyDefn(namePropertyDefn);
-        firstObjectNamePropertyVal.setDirty(false);
-        firstObjectNamePropertyVal.setInConflict(false);
-        List<String> objectNameList = new ArrayList<>();
-        objectNameList.add("object instance");
-        firstObjectNamePropertyVal.setStringList(objectNameList);
-        firstObjectNamePropertyVal = stringPropertyValRepository.save(firstObjectNamePropertyVal);
-
-        Collection<PropertyVal> propertiesForFirstObject = new ArrayList<>();
-        propertiesForFirstObject.add(firstObjectClazzPropertyVal);
-        propertiesForFirstObject.add(firstObjectNamePropertyVal);
-
-        DObject firstDObject = new DObject();
-        firstDObject.setProperties(propertiesForFirstObject);
-        dObjectRepository.save(firstDObject);
+        DObject firstDObject = props.createNewDObject("object instance", objectClazz);
+        persistenceHelper.saveDObjectAndItsProperties(firstDObject);
 
         logger.info("Initial System Load has been completed.");
     }

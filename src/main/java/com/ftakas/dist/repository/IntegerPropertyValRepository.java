@@ -1,6 +1,6 @@
 package com.ftakas.dist.repository;
 
-import com.ftakas.dist.domain.IntegerPropertyVal;
+import com.ftakas.dist.domain.property.IntegerPropertyVal;
 
 import javax.transaction.Transactional;
 

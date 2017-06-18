@@ -1,6 +1,6 @@
 package com.ftakas.dist.repository;
 
-import com.ftakas.dist.domain.ClazzPropertyVal;
+import com.ftakas.dist.domain.property.ClazzPropertyVal;
 
 import javax.transaction.Transactional;
 

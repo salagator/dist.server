@@ -1,6 +1,6 @@
 package com.ftakas.dist.repository;
 
-import com.ftakas.dist.domain.DObjectPropertyVal;
+import com.ftakas.dist.domain.property.DObjectPropertyVal;
 
 import javax.transaction.Transactional;
 

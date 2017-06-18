@@ -1,6 +1,6 @@
 package com.ftakas.dist.repository;
 
-import com.ftakas.dist.domain.FloatingPointPropertyVal;
+import com.ftakas.dist.domain.property.FloatingPointPropertyVal;
 
 import javax.transaction.Transactional;
 
