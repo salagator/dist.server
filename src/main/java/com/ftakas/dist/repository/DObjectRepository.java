@@ -1,10 +1,10 @@
 package com.ftakas.dist.repository;
 
-import com.ftakas.dist.domain.Clazz;
+import com.ftakas.dist.domain.DObject;
 import org.springframework.data.repository.CrudRepository;
 
 import javax.transaction.Transactional;
 
 @Transactional
-public interface ClazzRepository extends CrudRepository<Clazz, Long> {
+public interface DObjectRepository extends CrudRepository<DObject, Long> {
 }
